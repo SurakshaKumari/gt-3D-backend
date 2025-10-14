@@ -1,1 +1,4 @@
-# gt-3D-backend
+Setup instructions
+Technologies used
+Dummy login details
+Description of main features implemented
