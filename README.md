@@ -3,6 +3,7 @@ create a repo for backend , and cloned it in vscode for local setup.
 
 packages Installed by npm:
 express mongoose socket.io cors dotenv
+installed nodemon
 
 Technologies used
 Dummy login details
