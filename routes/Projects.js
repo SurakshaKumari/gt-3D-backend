@@ -122,9 +122,9 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Project not found' });
     }
 
-    if (project.modelUrl) {
+    if (project.modelPath) {
       try {
-        await fs.unlink(path.join(UPLOADS_DIR, project.modelUrl));
+        await fs.unlink(path.join(UPLOADS_DIR, project.modelPath));
       } catch (e) {
         console.warn('Failed to delete model file:', e.message);
       }
@@ -167,7 +167,7 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
     console.log("file ",req.file )
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      { modelUrl: req.file.filename },
+      { modelPath: req.file.filename },
       { new: true }
     );
     console.log("upload file", project)
@@ -179,7 +179,7 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
     res.json({ 
       success: true, 
       data: { 
-        modelUrl: `/api/projects/${req.params.id}/model`,
+        modelPath: `/api/projects/${req.params.id}/model`,
         filename: req.file.filename 
       } 
     });
@@ -191,11 +191,11 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
 router.get('/:id/model', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
-    if (!project || !project.modelUrl) {
+    if (!project || !project.modelPath) {
       return res.status(404).json({ success: false, error: 'Model not found' });
     }
 
-    const filePath = path.join(UPLOADS_DIR, project.modelUrl);
+    const filePath = path.join(UPLOADS_DIR, project.modelPath);
     res.setHeader('Content-Type', 'application/octet-stream');
     res.sendFile(filePath, (err) => {
       if (err) {
