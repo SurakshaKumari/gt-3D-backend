@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const projectRoutes = require('./routes/Projects');
+const Project = require('./models/Project'); // Import Project model
 
 const app = express();
 const server = http.createServer(app);
@@ -17,30 +18,135 @@ app.use(express.json());
 app.use('/api/projects', projectRoutes);
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
 
-// Socket.IO logic
+// Socket.IO logic with database persistence
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('joinProject', (projectId) => {
     socket.join(projectId);
+    console.log(`User ${socket.id} joined project ${projectId}`);
   });
 
-  socket.on('annotationAdded', (data) => {
-    io.to(data.projectId).emit('newAnnotation', data.annotation);
+  socket.on('annotationAdded', async (data) => {
+    try {
+      console.log('Annotation received:', data);
+      
+      // Save annotation to database
+      const project = await Project.findByIdAndUpdate(
+        data.projectId,
+        { $push: { annotations: data.annotation } },
+        { new: true }
+      );
+      
+      if (project) {
+        console.log('Annotation saved to database');
+        // Broadcast to other users in the project
+        socket.to(data.projectId).emit('newAnnotation', data.annotation);
+      }
+    } catch (error) {
+      console.error('Error saving annotation:', error);
+    }
   });
 
-  socket.on('chatMessage', (data) => {
-    io.to(data.projectId).emit('newChatMessage', data.message);
+  socket.on('chatMessage', async (data) => {
+    try {
+      console.log('Chat message received:', data);
+      
+      const { projectId, message } = data;
+      
+      // Save message to database
+      const project = await Project.findByIdAndUpdate(
+        projectId,
+        { $push: { chat: message } },
+        { new: true }
+      );
+
+      if (project) {
+        console.log('Chat message saved to database');
+        // Broadcast to all users in the project (including sender)
+        io.to(projectId).emit('newChatMessage', message);
+      } else {
+        console.error('Project not found for chat message');
+      }
+    } catch (error) {
+      console.error('Error saving chat message:', error);
+    }
   });
 
-  socket.on('cameraUpdate', (data) => {
-    io.to(data.projectId).emit('cameraSync', data.camera);
+  socket.on('modelTransform', async (data) => {
+    try {
+      console.log('Model transform received:', data);
+      
+      const { projectId, modelState } = data;
+      
+      // Save model state to database
+      const project = await Project.findByIdAndUpdate(
+        projectId,
+        { modelState: modelState },
+        { new: true }
+      );
+
+      if (project) {
+        console.log('Model state saved to database');
+        // Broadcast to other users
+        socket.to(projectId).emit('modelUpdated', modelState);
+      }
+    } catch (error) {
+      console.error('Error saving model transform:', error);
+    }
+  });
+
+  socket.on('cameraUpdate', async (data) => {
+    try {
+      const { projectId, cameraState } = data;
+      
+      // Optional: Save camera state if you want to persist it
+      // const project = await Project.findByIdAndUpdate(
+      //   projectId,
+      //   { cameraState: cameraState },
+      //   { new: true }
+      // );
+
+      // Broadcast to other users
+      socket.to(projectId).emit('cameraSync', cameraState);
+    } catch (error) {
+      console.error('Error handling camera update:', error);
+    }
+  });
+
+  socket.on('userJoined', (data) => {
+    const { projectId, user } = data;
+    console.log(`User ${user.name} joined project ${projectId}`);
+    
+    // Broadcast user joined event
+    socket.to(projectId).emit('userJoined', {
+      user: user,
+      message: `${user.name} joined the project`
+    });
+  });
+
+  socket.on('userLeft', (data) => {
+    const { projectId, user } = data;
+    console.log(`User ${user.name} left project ${projectId}`);
+    
+    // Broadcast user left event
+    socket.to(projectId).emit('userLeft', {
+      user: user,
+      message: `${user.name} left the project`
+    });
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('User disconnected:', socket.id);
   });
 });
 
