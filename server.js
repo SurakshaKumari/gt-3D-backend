@@ -10,7 +10,7 @@ const Project = require('./models/Project');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: "https://gt-3-d-backend.vercel.app" } 
+  cors: { origin: "http://localhost:3000" } 
 });
 
 app.use(cors());
