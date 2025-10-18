@@ -1,14 +1,11 @@
 Setup instructions:
-create a repo for backend , and cloned it in vscode for local setup.
-create an structure method : Routes , Models , Server.js , .Env file
-add nodemodules and .env in gitignore
-
-
+•	Repository created and setup an structure
+•	structure method : Routes , Models , Server.js , .Env file
+•	add nodemodules and .env in gitignore
 packages Installed by npm:
-express mongoose socket.io cors dotenv
-installed nodemon
-
-
-Technologies used
-Dummy login details
-Description of main features implemented
+•	express
+•	 mongoose 
+•	socket.io 
+•	cors 
+•	dotenv
+•	 nodemon
