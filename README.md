@@ -1,4 +1,4 @@
-# 🚀 3D Collaboration Platform
+# 🚀 3D Platform
 
 A real-time 3D model collaboration platform with annotations and chat functionality.
 
