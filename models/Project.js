@@ -8,9 +8,8 @@ const ProjectSchema = new mongoose.Schema({
   ownerId: String,
   userId: String,
   status: { type: String, default: 'active' },
-  
-
-  modelPath: String, 
+  modelUrl:String,
+   modelPath: String, 
   modelState: {
     position: { 
       x: { type: Number, default: 0 },
