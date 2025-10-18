@@ -164,11 +164,13 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
+    console.log("file ",req.file )
     const project = await Project.findByIdAndUpdate(
       req.params.id,
       { modelPath: req.file.filename },
       { new: true }
     );
+    console.log("upload file", project)
 
     if (!project) {
       return res.status(404).json({ success: false, error: 'Project not found' });
