@@ -1,11 +1,9 @@
-// routes/projects.js
 const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
 const Project = require('../models/Project');
 
-// Ensure uploads directory exists
 const UPLOADS_DIR = path.join(__dirname, '../uploads');
 const ensureUploadsDir = async () => {
   try {
@@ -16,7 +14,6 @@ const ensureUploadsDir = async () => {
 };
 ensureUploadsDir();
 
-// Get all projects
 router.get('/', async (req, res) => {
   try {
     const projects = await Project.find();
@@ -30,7 +27,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get all projects with filtering, pagination, and sorting
+
 router.get('/filter', async (req, res) => {
   try {
     const {
@@ -76,7 +73,7 @@ router.get('/filter', async (req, res) => {
   }
 });
 
-// Get project by ID
+
 router.get('/:id', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -89,7 +86,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create project
+
 router.post('/', async (req, res) => {
   try {
     const project = new Project(req.body);
@@ -100,7 +97,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update project (for general metadata)
+
 router.put('/:id', async (req, res) => {
   try {
     const project = await Project.findByIdAndUpdate(
@@ -117,7 +114,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete project (including model file)
+
 router.delete('/:id', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -125,7 +122,6 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Project not found' });
     }
 
-    // Delete model file if exists
     if (project.modelPath) {
       try {
         await fs.unlink(path.join(UPLOADS_DIR, project.modelPath));
@@ -141,7 +137,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// ✅ Upload STL model file
 const multer = require('multer');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -169,8 +164,6 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
-
-    // Update project with model path
     const project = await Project.findByIdAndUpdate(
       req.params.id,
       { modelPath: req.file.filename },
@@ -193,7 +186,6 @@ router.post('/:id/model', upload.single('model'), async (req, res) => {
   }
 });
 
-// ✅ Serve uploaded model file
 router.get('/:id/model', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -214,7 +206,7 @@ router.get('/:id/model', async (req, res) => {
   }
 });
 
-// ✅ Add annotation
+
 router.post('/:id/annotation', async (req, res) => {
   try {
     const project = await Project.findByIdAndUpdate(
@@ -231,7 +223,6 @@ router.post('/:id/annotation', async (req, res) => {
   }
 });
 
-// ✅ Save full scene state (position, rotation, scale, annotations)
 router.put('/:id/scene', async (req, res) => {
   try {
     const { modelState, annotations } = req.body;
@@ -256,9 +247,7 @@ router.put('/:id/scene', async (req, res) => {
   }
 });
 
-// ✅ CHAT ROUTES
 
-// Get chat messages for a project
 router.get('/:id/chat', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
@@ -274,7 +263,7 @@ router.get('/:id/chat', async (req, res) => {
   }
 });
 
-// Add chat message to project
+
 router.post('/:id/chat', async (req, res) => {
   try {
     const { text, userId, userName } = req.body;
@@ -313,7 +302,7 @@ router.post('/:id/chat', async (req, res) => {
   }
 });
 
-// Clear chat history
+
 router.delete('/:id/chat', async (req, res) => {
   try {
     const project = await Project.findByIdAndUpdate(
@@ -335,7 +324,6 @@ router.delete('/:id/chat', async (req, res) => {
   }
 });
 
-// Delete specific chat message
 router.delete('/:id/chat/:messageId', async (req, res) => {
   try {
     const project = await Project.findByIdAndUpdate(
