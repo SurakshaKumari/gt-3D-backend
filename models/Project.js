@@ -9,8 +9,8 @@ const ProjectSchema = new mongoose.Schema({
   userId: String,
   status: { type: String, default: 'active' },
   
-  // ✅ 3D scene fields
-  modelPath: String, // filename in uploads/
+
+  modelPath: String, 
   modelState: {
     position: { 
       x: { type: Number, default: 0 },
@@ -30,7 +30,6 @@ const ProjectSchema = new mongoose.Schema({
     mode: { type: String, default: 'translate' }
   },
   
-  // ✅ Annotations array
   annotations: [{
     id: String,
     position: { 
@@ -44,7 +43,7 @@ const ProjectSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
   }],
 
-  // ✅ NEW: Chat messages array
+ 
   chat: [{
     id: String,
     text: String,
@@ -57,7 +56,7 @@ const ProjectSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Update the updatedAt field before saving
+
 ProjectSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
