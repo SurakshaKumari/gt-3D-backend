@@ -20,7 +20,11 @@ const allowedOrigins = [
 // Add any additional origins from environment variable
 if (process.env.CLIENT_ORIGIN) {
   const envOrigins = process.env.CLIENT_ORIGIN.split(',');
-  allowedOrigins.push(...envOrigins);
+  envOrigins.forEach(origin => {
+    if (!allowedOrigins.includes(origin)) {
+      allowedOrigins.push(origin);
+    }
+  });
 }
 
 console.log('🌐 Allowed CORS origins:', allowedOrigins);
@@ -43,19 +47,14 @@ const corsOptions = {
   exposedHeaders: ['Content-Length', 'X-Powered-By']
 };
 
-// Apply CORS middleware FIRST
+// Apply CORS middleware FIRST - FIXED: Remove the problematic app.options line
 app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use('/api/projects', projectRoutes);
 
 // Health check endpoint with CORS headers
 app.get('/health', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
   res.status(200).json({ 
     status: 'OK', 
     service: 'Socket.IO Server',
@@ -69,31 +68,14 @@ app.get('/health', (req, res) => {
 // Socket.IO with STRICT CORS configuration
 const io = socketIo(server, {
   cors: {
-    origin: function(origin, callback) {
-      // Allow requests with no origin
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log('❌ Socket.IO CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: allowedOrigins, // Use the array directly instead of function for simplicity
     credentials: true,
     methods: ['GET', 'POST']
   },
   transports: ['websocket', 'polling'],
   allowEIO3: true, // Allow Engine.IO v3 compatibility
   pingTimeout: 60000,
-  pingInterval: 25000,
-  cookie: {
-    name: 'io',
-    path: '/',
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true
-  }
+  pingInterval: 25000
 });
 
 // MongoDB connection
