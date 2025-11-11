@@ -10,7 +10,7 @@ const Project = require('./models/Project');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: "http://localhost:3000" } 
+  cors: { origin: process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : '*' }
 });
 
 app.use(cors());
