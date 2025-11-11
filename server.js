@@ -9,37 +9,15 @@ const Project = require('./models/Project');
 
 const app = express();
 const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: { origin: process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : '*',
+    credentials: true
+   }
+});
 
-// Consistent CORS configuration
-const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use('/api/projects', projectRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    service: 'Socket.IO Server',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Socket.IO with production settings
-const io = socketIo(server, {
-  cors: corsOptions,
-  transports: ['websocket', 'polling'],
-  pingTimeout: 60000,
-  pingInterval: 25000
-});
-
-// MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ MongoDB connected successfully');
@@ -150,8 +128,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✅ Health check available at: http://localhost:${PORT}/health`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
